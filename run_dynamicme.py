@@ -45,6 +45,7 @@ def main(config_path):
     print(f"   X0    : {config['X0']}")
     print(f"   LB_EX : {config['LB_EX']}")
     print(f"   LB_O2 : {config['LB_O2']}")
+    print(f"   LB_GLC : {config['LB_GLC']}")
     # Simulation parameters
     T = config['T']
     dt = config['dt']
@@ -52,6 +53,7 @@ def main(config_path):
     X0 = config['X0']
     c0_dict = config['c0_dict']
     LB_EX = config['LB_EX']
+    LB_GLC = config['LB_GLC']
     LB_O2 = config['LB_O2']
 
 
@@ -137,8 +139,12 @@ def main(config_path):
     lb_dict = {}
     for mid in c0_dict.keys():
         rxn = DynamicME(me).get_exchange_rxn(mid)
-        lb_dict[rxn.id] = LB_O2 if rxn.id == 'EX_o2_e' else LB_EX
-    lb_dict[me.reactions.EX_o2_e.id] = LB_O2
+        if rxn.id == "EX_o2_e":
+            lb_dict[rxn.id] = LB_O2
+        elif rxn.id == "EX_glc__D_e":
+            lb_dict[rxn.id] = LB_GLC
+        else:
+            lb_dict[rxn.id] = LB_EX
     ub_dict = {}
 
     # Run simulation
