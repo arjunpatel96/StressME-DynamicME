@@ -409,6 +409,72 @@ class DynamicME(object):
 
         return result
 
+    def simulate_step(self, c0_dict, X0, dt=0.1,
+                      o2_e_id='o2_e', o2_head=0.21, kLa=7.5,
+                      conc_dep_fluxes=False,
+                      extra_rxns_tracked=[],
+                      prec_bs=1e-6,
+                      ZERO_CONC=1e-3,
+                      lb_dict={},
+                      ub_dict={},
+                      proteome_has_inertia=False,
+                      cplx_conc_dict0={},
+                      mm_model=None,
+                      basis=None,
+                      verbosity=2,
+                      LB_DEFAULT=-1000.,
+                      UB_DEFAULT=1000.,
+                      throttle_near_zero=True):
+        """
+        Run exactly one timestep (t=0 -> t=dt) using the same logic as simulate_batch,
+        and return only the next-step concentrations/biomass plus the fluxes used for that step.
+        """
+
+        # Run simulate_batch for exactly one step by setting T=dt
+        res = self.simulate_batch(
+            T=dt,
+            c0_dict=c0_dict,
+            X0=X0,
+            dt=dt,
+            o2_e_id=o2_e_id,
+            o2_head=o2_head,
+            kLa=kLa,
+            conc_dep_fluxes=conc_dep_fluxes,
+            extra_rxns_tracked=extra_rxns_tracked,
+            prec_bs=prec_bs,
+            ZERO_CONC=ZERO_CONC,
+            lb_dict=lb_dict,
+            ub_dict=ub_dict,
+            proteome_has_inertia=proteome_has_inertia,
+            cplx_conc_dict0=cplx_conc_dict0,
+            mm_model=mm_model,
+            basis=basis,
+            verbosity=verbosity,
+            LB_DEFAULT=LB_DEFAULT,
+            UB_DEFAULT=UB_DEFAULT,
+            throttle_near_zero=throttle_near_zero
+        )
+
+        # res['time'] should be [0, dt] and profiles should have length 2
+        out = {
+            "time0": res["time"][0],
+            "time1": res["time"][1],
+            "concentration0": res["concentration"][0],
+            "concentration1": res["concentration"][1],
+            "biomass0": res["biomass"][0],
+            "biomass1": res["biomass"][1],
+            # fluxes used during the single step
+            "ex_flux": res["ex_flux"][0],
+            "rxn_flux": res["rxn_flux"][0],
+            # protein/complex concentrations (if you care)
+            "complex0": res["complex"][0],
+            "complex1": res["complex"][1],
+            # basis after that solve (useful if you want warm starts)
+            "basis": res.get("basis", None),
+        }
+
+        return out
+
 
     def get_exchange_rxn(self, metid, direction='both', exchange_one_rxn=None):
         """
